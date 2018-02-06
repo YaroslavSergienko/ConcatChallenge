@@ -12,15 +12,24 @@ public class ConcatChallenge {
     private static final String FILE_PATH = "C:\\Users\\sergieny\\Downloads\\words.txt";
     private static ArrayList<String> alfBethList = new ArrayList<>();
     private static HashMap<IndexOfEntrance, Boolean> temporaryRepository = new HashMap<>();
-
     static class IndexOfEntrance {
-        Integer start;
-        Integer end;
+        int start;
+        int end;
 
-        IndexOfEntrance(Integer start, Integer end) {
+        IndexOfEntrance(int start, int end) {
             this.start = start;
             this.end = end;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            IndexOfEntrance that = (IndexOfEntrance) o;
+            return start == that.start &&
+                    end == that.end;
+        }
+
     }
 
     public static void main(String[] args) {
@@ -31,24 +40,48 @@ public class ConcatChallenge {
     private static boolean generateCombinations(@NotNull String word, int first, int finals, HashMap<IndexOfEntrance, Boolean> repository) {
 
         IndexOfEntrance item = new IndexOfEntrance(first, finals);
-        if (Collections.binarySearch(alfBethList, word) != -1) {
-            repository.put(item, true);
+
+        if(word.length() == 0) {
             return true;
         }
+
+        if (word.length() < 2)
+            return false;
+
+
         if (repository.containsKey(item)) {
             return repository.get(item);
+        }
+        if (binary(word, alfBethList, 0,alfBethList.size()-1) != -1) {
+            repository.put(item, true);
+            return true;
         }
         int start = 0;
         int end = word.length();
         for (int i = start; i < end - 1; i++) {
-            if (Collections.binarySearch(alfBethList, word.substring(start, i++)) != -1
-                    && generateCombinations(word.substring(i++), i + first++, i + finals, repository)) {
+            if (binary(word.substring(start, i+1), alfBethList, 0,alfBethList.size()-1) != -1
+                    && generateCombinations(word.substring(i++), i + (first +1), i + finals, repository)) {
                 repository.put(item, true);
                 return true;
             }
         }
+
         repository.put(item, false);
         return false;
+    }
+
+    private static int binary(String str, ArrayList<String> alfaBeth, int start, int end) {
+        if(start > end)
+            return -1;
+        int mid = start + (end - start)/2;
+
+        int result = alfaBeth.get(mid).compareTo(str);
+        if(result == 0)
+            return mid;
+        else if(result < 0)
+            return binary(str, alfaBeth, mid+1, end);
+        else
+            return binary(str, alfaBeth, start, mid-1);
     }
 
     //собственно сама проверка и вычитка из файла
@@ -63,7 +96,7 @@ public class ConcatChallenge {
             int register = 0;
             while (sortedList.size() > 0) {
                 String word = sortedList.remove(0);
-                int index = Collections.binarySearch(alfBethList, word);
+                int index = binary(word, alfBethList, 0, alfBethList.size()-1);
                 alfBethList.remove(index);
 
                 if (generateCombinations(word, 0, word.length() - 1, temporaryRepository)) {
